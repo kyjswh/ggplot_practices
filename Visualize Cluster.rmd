@@ -1,0 +1,56 @@
+---
+title: "ggplot visualization example for adding layers"
+author: "Zhengkan Yang"
+date: "Monday, August 11, 2014"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+#Visualize two layer data using ggplot2
+
+
+##Main Function used
+*`geom_bar()`
+*`element_text()`
+*`theme()`
+
+
+##Set working directory and read the data
+```{r}
+library(ggplot2)
+library(reshape)
+setwd("C:/Users/zhengkya/Desktop/Crash&Repair Data/CSV/")
+cluster = read.csv("cluster.csv")
+```
+
+##Display the first 5 rows of data
+```{r, echo=FALSE}
+head(cluster)
+```
+
+##Restructure the data
+```{r}
+cluster_count = cluster[,c(1,12,18)]
+cluster.melted = reshape(cluster, idvar = 'cluster',varying= list(names(cluster)[-c(1,12,18)]),
+                        timevar = "Bucket", times = names(cluster)[-c(1,12,18)],v.names="avg_value",direction='long',new.row.names=NULL)
+cluster.melted
+cluster.melted$avg_value <- as.numeric(as.character(cluster.melted$avg_value))
+cluster.melted$avg_value
+```
+
+
+
+##Visualize
+*To adjust the y-axis limit without removing any records outside the range, use coord_cartesian(ylim=c())
+*To change themes on the canvas: text, font, size, etc, use theme()
+*To change legend, use scale_fill_discrete()
+```{r}
+par(mfrow=c(2,1))
+ggplot(cluster.melted, aes(x=Bucket, y =avg_value, fill = as.factor(cluster))) + geom_bar(stat='identity',position = 'dodge') + coord_cartesian(ylim=c(0,4)) + ggtitle("Cluster Comparison") + theme(axis.title = element_text(size=20,face="bold"),axis.text.x = element_text(size=20,face='bold',angle=90),axis.text.y = element_text(size=15,face='bold'),legend.title = element_text(size=20,face='bold'), legend.text = element_text(size=15,face='bold'), plot.title = element_text(family="Times New Roman",size=25,face='bold')) + scale_fill_discrete(name="Cluster")
+ggplot(cluster_count, aes(x = as.factor(cluster), y = count, fill = as.factor(cluster))) + geom_bar(stat = "identity") + scale_fill_discrete(name="Cluster") + ggtitle("Counts of phones/average repair rate within each cluster") + theme(title = element_text(size = 20, face = "bold"),text = element_text(size=15,face="bold"),axis.text=element_text(size = 20, face = "bold"),legend.title = element_text(size=20,face='bold'), legend.text = element_text(size=15,face='bold') )+ scale_x_discrete(name="Cluster") + geom_text(aes(label=sprintf("%.2f %%", rpr_binary*100)), size = 8,fontface="bold")
+```
+
